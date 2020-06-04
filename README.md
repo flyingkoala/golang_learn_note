@@ -12,8 +12,11 @@ make创建两个int型切片，一个长度为0，容量为10，一个长度为1
  	x=append(x,1)
  	fmt.Println(x)
 
-显示结果如下图   
-![image](https://github.com/flyingkoala/golang_learn_note/blob/master/image/20200603105945.png)
+显示结果如下
+
+    [1]
+    [0 0 0 0 0 0 0 0 0 0 1]
+
 
 原因是append函数将元素附加到切片的末尾。   
 ### 关于append对切片地址的影响。
@@ -30,8 +33,15 @@ make创建两个int型切片，一个长度为0，容量为10，一个长度为1
 	fmt.Println(i,&i[0])
 	i=append(i,1)
 	fmt.Println(i,&i[0])
-显示结果如下图   
-![image](https://github.com/flyingkoala/golang_learn_note/blob/master/image/20200603135526.png)   
+显示结果如下   
+
+    append没有扩容
+    [0 0] 0xc0000660f0
+    [0 0 1] 0xc0000660f0
+    append导致扩容
+    [0 0 0 0 0 0 0 0 0 0] 0xc000066140
+    [0 0 0 0 0 0 0 0 0 0 1] 0xc0000960a0
+
 不难得出结论，append时，切片没有扩容，内存地址不会变，存在动态扩容，则分配新的内存地址   
 slice这种数据结构便于使用和管理数据集合，可以理解为是一种“动态数组”，slice也是围绕动态数组的概念来构建的。   
 以下两条规则：   
