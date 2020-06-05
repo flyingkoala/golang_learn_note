@@ -189,6 +189,25 @@ WaitGroup 等待一组goroutinue执行完毕. 主程序调用 Add 添加等待�
 **通过channel实现goroutine之间的同步** ，参考goroutine2.go  
 实现方式：通过channel能在多个groutine之间通讯，当一个goroutine完成时候向channel发送退出信号,等所有goroutine退出时候，利用for循环channe去channel中的信号，若取不到数据会阻塞原理，等待所有goroutine执行完毕，使用该方法有个前提是你已经知道了你启动了多少个goroutine  
 
+    func cal(a int , b int ,exitchan chan bool)  {
+    	c := a+b
+    	fmt.Printf("%d + %d = %d\n",a,b,c)
+    	time.Sleep(time.Second*2)
+    	exitchan <- true
+    }
+    
+    func main() {
+    
+    	exitchan := make(chan bool,10)  //声明并分配管道内存
+    	for i :=0 ; i<10 ;i++{
+    		go cal(i,i+1,exitchan)
+    	}
+    	for j :=0; j<10; j++{
+    		<- exitchan  //取信号数据，如果取不到则会阻塞
+    	}
+    	close(exitchan) // 关闭管道
+    }
+
 ### goroutine之间的通讯
 goroutine本质上是协程，可以理解为不受内核调度，而受go调度器管理的线程。goroutine之间可以通过channel进行通信或者说是数据共享。  
 参考goroutine3.go 
