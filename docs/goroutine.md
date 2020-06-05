@@ -32,7 +32,7 @@ G指的是goroutine，其实本质上也是一种轻量级的线程。
 4. 调度时，先从当前p中找可用的g，找不到就从别的p中偷，每61次，从全局的所有g中取一个
 
 
-### proc.go
+### proc.go源码
         // Create a new g running fn with siz bytes of arguments.
     // Put it on the queue of g's waiting to run.
     // The compiler turns a go statement into a call to this.
@@ -162,4 +162,68 @@ G指的是goroutine，其实本质上也是一种轻量级的线程。
     	}
     	releasem(_g_.m)
     }
+
+### 同步的goroutine  
+由于goroutine是异步执行的，那很有可能出现主程序退出时还有goroutine没有执行完，此时goroutine也会跟着退出。此时如果想等到所有goroutine任务执行完毕才退出，go提供了sync包和channel来解决同步问题  
+
+
+
+**使用sync包同步goroutine**，参考goroutine1.go 
+WaitGroup 等待一组goroutinue执行完毕. 主程序调用 Add 添加等待的goroutinue数量. 每个goroutinue在执行结束时调用 Done ，此时等待队列数量减1.，主程序通过Wait阻塞，直到等待队列为0  
+
+    //使用sync包同步goroutine
+    func main() {
+    	var go_sync sync.WaitGroup //声明一个WaitGroup变量
+    	for i :=0 ; i<10 ;i++{
+    		go_sync.Add(1) // WaitGroup的计数加1
+    		go cal(i,i+1,&go_sync)
+    	}
+    	go_sync.Wait()  //等待所有goroutine执行完毕
+    }
+    func cal(a int , b int ,n *sync.WaitGroup)  {
+    	c := a+b
+    	fmt.Printf("%d + %d = %d\n",a,b,c)
+    	defer n.Done() //goroutinue完成后, WaitGroup的计数-1
+    }
+
+**通过channel实现goroutine之间的同步** ，参考goroutine2.go  
+实现方式：通过channel能在多个groutine之间通讯，当一个goroutine完成时候向channel发送退出信号,等所有goroutine退出时候，利用for循环channe去channel中的信号，若取不到数据会阻塞原理，等待所有goroutine执行完毕，使用该方法有个前提是你已经知道了你启动了多少个goroutine  
+
+### goroutine之间的通讯
+goroutine本质上是协程，可以理解为不受内核调度，而受go调度器管理的线程。goroutine之间可以通过channel进行通信或者说是数据共享。  
+参考goroutine3.go 
+
+    //生产者
+    func Productor(mychan chan int,data int,wait *sync.WaitGroup)  {
+    	mychan <- data
+    	fmt.Println("product data：",data)
+    	wait.Done()
+    }
+    //消费者
+    func Consumer(mychan chan int,wait *sync.WaitGroup)  {
+    	a := <- mychan
+    	fmt.Println("consumer data：",a)
+    	wait.Done()
+    }
+    //主函数
+    func main() {
     
+    	datachan := make(chan int, 100)   //通讯数据管道
+    	var wg sync.WaitGroup
+    
+    	for i := 0; i < 10; i++ {
+    		go Productor(datachan, i,&wg) //生产数据
+    		wg.Add(1)
+    	}
+    	for j := 0; j < 10; j++ {
+    		go Consumer(datachan,&wg)  //消费数据
+    		wg.Add(1)
+    	}
+    	wg.Wait()
+    }
+     
+
+
+    
+### 参考资料
+[go语言之行--golang核武器goroutine调度原理、channel详解](https://www.cnblogs.com/wdliu/p/9272220.html)
