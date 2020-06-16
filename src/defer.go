@@ -23,6 +23,23 @@ func f1_1() (r int){
 	return
 }
 
+func f2()(r int){
+	defer func(r int) {
+		fmt.Println("呵呵",r)
+		r=r+5
+		fmt.Println("呵呵",r)
+	}(r)
+	return 1
+}
+
+func f3()(r int){
+	defer func(r *int) {
+
+		*r=*r+5
+	}(&r)
+	return 1
+}
+
 func main(){
-	fmt.Println(f1explain())
+	fmt.Println(f3())
 }

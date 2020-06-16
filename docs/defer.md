@@ -31,3 +31,43 @@
     	//3.空的return指令
     	return
     }
+  
+2.代码如下  
+
+    func f2()(r int){
+    	defer func(r int) {
+    		r=r+5
+    	}(r)
+    	return 1
+    }
+    
+    func main(){
+    	fmt.Println(f2())
+    }
+
+ 响应如下  
+
+    1   
+值不会改变的原因依旧是 这里改变的r是传值传进去的，是copy了一份，不会影响到原来返回的r  
+
+3.代码如下  
+
+    func f3()(r int){
+    	defer func(r *int) {
+    
+    		*r=*r+5
+    	}(&r)
+    	return 1
+    }
+    
+    func main(){
+    	fmt.Println(f3())
+    }  
+
+得到响应  
+
+    6  
+
+传指针，defer执行的函数可以改变r的值
+
+
